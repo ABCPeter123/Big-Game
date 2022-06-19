@@ -1,9 +1,6 @@
-from math import floor
-import pickle
-from random import randint
 import time
-import os
 
+from math import floor
 from classes.bank import bank
 from classes.casino import Casino
 from classes.character import Character
@@ -13,29 +10,29 @@ from classes.save_game import SaveGame
 from classes.school import School
 from classes.shop import Shop
 from classes.workplace import Workplace
-
+from classes.time_tracker import Time
 
 def play_game():
     save_game = SaveGame()
     save_game.load_game()
     # Creates a default player:
     player = Character(*save_game.player_config['character'].values())
+    # Creates a default timer tracker for program to use:
+    time_tracker = Time(character=player)
     # Creates a default bank:
-    Bank = bank(*save_game.player_config['bank'].values())
+    Bank = bank(*save_game.player_config['bank'].values(), character=player)
     # Creates a default shop:
-    shop = Shop()
+    shop = Shop(character=player)
     # Creates a default prison:
     prison = Prison()
     # Creates a default casino:
-    casino = Casino(*save_game.player_config['casino'].values())
+    casino = Casino(*save_game.player_config['casino'].values(), character=player, Bank=Bank, time=time_tracker)
     # Creates a default restaurant:
-    restaurant = Restaurant()
-    # Creates a defaul school:
-    school = School()
-    # Creates a defaul workplace:
-    workplace = Workplace()
-    # Creates a default timer tracker for program to use:
-    Time = player.time
+    restaurant = Restaurant(character=player)
+    # Creates a default school:
+    school = School(character=player, time=time_tracker)
+    # Creates a default workplace:
+    workplace = Workplace(character=player, time=time_tracker)
 
     # Creates a bank payback system countdown tracker:
     player.repay_countdown = player.time
@@ -127,11 +124,11 @@ def play_game():
 
                     # Below is for determining whether the bet is applicable:
                     if 0 < bet_amount <= player.player_money:
-                        casino.bet(player, bet_amount)
+                        casino.bet(bet_amount)
 
                         time.sleep(1)
                         player.time = int(player.time + 2)
-                        Time = int(Time + 2)
+                        time_tracker.time = int(time_tracker.time + 2)
                         player.repay_countdown = int(player.repay_countdown + 2)
 
                         time.sleep(1)
@@ -164,13 +161,13 @@ def play_game():
             time.sleep(1)
 
             # Bank Daily Addition and Daily Interest:
-            day += floor(Time / 24)
+            day += floor(time_tracker.time / 24)
             if day >= 1:
                 number = 1
                 while number <= day:
                     Bank.Daily_Addition()
-                    Bank.Daily_Interest(player)
-                    Time -= 24
+                    Bank.Daily_Interest()
+                    time_tracker.time -= 24
                     number += 1
                 day = 0
                 number = 1
@@ -180,7 +177,7 @@ def play_game():
             # Bank repay countdown tester:
             if int(player.repay_countdown) >= 24 and player.repay == True:
                 print("It seems like you haven't payback the money to the bank under 24 hours.")
-                Bank.bank_prison(player)
+                Bank.bank_prison()
                 time.sleep(0.5)
                 print(
                     "Your money in your purse and bank account have been transfered to the bank. New criminal record has been logged into your account.")
@@ -253,7 +250,7 @@ def play_game():
                                 money=player.player_money))
                         time.sleep(0.5)
                     elif 0 < deposited_amount <= int(player.player_money):
-                        Bank.Deposit(player, deposited_amount)
+                        Bank.Deposit(deposited_amount)
                         print("Successful! Now you have ${money} in your bank!".format(money=player.money_in_bank))
                         time.sleep(0.5)
                         bank_action = input("""
@@ -304,7 +301,7 @@ def play_game():
                                 money=player.money_in_bank))
                         time.sleep(0.5)
                     elif 0 < withdrawed_amount <= int(player.money_in_bank):
-                        Bank.Withdraw(player, withdrawed_amount)
+                        Bank.Withdraw(withdrawed_amount)
                         print("Successful! Now you have ${money} in your purse!".format(money=player.player_money))
                         time.sleep(0.5)
                         bank_action = input("""
@@ -357,7 +354,7 @@ def play_game():
                                         money=Bank.bank_money))
                                 time.sleep(0.5)
                             elif 0 < borrowed_amount <= int(Bank.bank_money):
-                                Bank.Borrow(player, borrowed_amount)
+                                Bank.Borrow(borrowed_amount)
                                 print(
                                     "Successful! Now you have ${money} in your purse! You only have 24 hours to return it!".format(
                                         money=player.player_money))
@@ -439,7 +436,7 @@ def play_game():
                             print("Unavailable amount of money payed!")
                             time.sleep(0.5)
                         elif amount <= player.player_money and amount <= Bank.repay_amount:
-                            Bank.cash_pay(player, amount)
+                            Bank.cash_pay(amount)
                             print("Success! Now you only need to payback ${money}.".format(money=Bank.repay_amount))
                             time.sleep(0.5)
                         elif amount <= 0:
@@ -461,7 +458,7 @@ def play_game():
 
                         for items in player.items:
                             if pay_item == items[0] and items[1] > 0:
-                                Bank.item_pay(player, pay_item)
+                                Bank.item_pay(pay_item)
                                 print(
                                     "Successful! Now you only need to payback ${money}".format(money=Bank.repay_amount))
                                 break
@@ -483,13 +480,13 @@ def play_game():
                     bank_action = input("It doesn't seem like you entered an available action. Try again: ")
 
             # Bank Daily Addition and Daily Interest:
-            day += floor(Time / 24)
+            day += floor(time_tracker.time / 24)
             if day >= 1:
                 number = 1
                 while number <= day:
                     Bank.Daily_Addition()
-                    Bank.Daily_Interest(player)
-                    Time -= 24
+                    Bank.Daily_Interest()
+                    time_tracker.time -= 24
                     number += 1
                 day = 0
                 number = 1
@@ -499,7 +496,7 @@ def play_game():
             # Bank repay countdown tester:
             if int(player.repay_countdown) >= 24 and player.repay == True:
                 print("It seems like you haven't payback the money to the bank under 24 hours.")
-                Bank.bank_prison(player)
+                Bank.bank_prison()
                 time.sleep(0.5)
                 print(
                     "Your money in your purse and bank account have been transfered to the bank. New criminal record has been logged into your account.")
@@ -529,7 +526,7 @@ def play_game():
             purchase_item = input("Please enter an item name to buy: ")
             if purchase_item == "Nissan Skyline R34 GTR":
                 if float(player.player_money) >= 100000:
-                    shop.purchase(player, purchase_item)
+                    shop.purchase(purchase_item)
                     print("Success! Thank you, {name}, for buying {product}.".format(name=player.name,
                                                                                      product=purchase_item))
                     time.sleep(1)
@@ -538,7 +535,7 @@ def play_game():
                     time.sleep(1)
             elif purchase_item == "Modern House":
                 if float(player.player_money) >= 1000000:
-                    shop.purchase(player, purchase_item)
+                    shop.purchase(purchase_item)
                     print("Success! Thank you, {name}, for buying {product}.".format(name=player.name,
                                                                                      product=purchase_item))
                     time.sleep(1)
@@ -547,7 +544,7 @@ def play_game():
                     time.sleep(1)
             elif purchase_item == "Playboy Shirt":
                 if float(player.player_money) >= 1000:
-                    shop.purchase(player, purchase_item)
+                    shop.purchase(purchase_item)
                     print("Success! Thank you, {name}, for buying {product}.".format(name=player.name,
                                                                                      product=purchase_item))
                     time.sleep(1)
@@ -556,7 +553,7 @@ def play_game():
                     time.sleep(1)
             elif purchase_item == "Nike Shoes":
                 if float(player.player_money) >= 2000:
-                    shop.purchase(player, purchase_item)
+                    shop.purchase(purchase_item)
                     print("Success! Thank you, {name}, for buying {product}.".format(name=player.name,
                                                                                      product=purchase_item))
                     time.sleep(1)
@@ -565,7 +562,7 @@ def play_game():
                     time.sleep(1)
             elif purchase_item == "Rolex Watch":
                 if float(player.player_money) >= 10000:
-                    shop.purchase(player, purchase_item)
+                    shop.purchase(purchase_item)
                     print("Success! Thank you, {name}, for buying {product}.".format(name=player.name,
                                                                                      product=purchase_item))
                     time.sleep(1)
@@ -578,17 +575,17 @@ def play_game():
 
             # Below is the timing system:
             player.time = int(player.time + 1)
-            Time = int(Time + 1)
+            time_tracker.time = int(time_tracker.time + 1)
             player.repay_countdown = int(player.repay_countdown + 1)
 
             # Bank Daily Addition and Daily Interest:
-            day += floor(Time / 24)
+            day += floor(time_tracker.time / 24)
             if day >= 1:
                 number = 1
                 while number <= day:
                     Bank.Daily_Addition()
-                    Bank.Daily_Interest(player)
-                    Time -= 24
+                    Bank.Daily_Interest()
+                    time_tracker.time -= 24
                     number += 1
                 day = 0
                 number = 1
@@ -598,7 +595,7 @@ def play_game():
             # Bank repay countdown tester:
             if int(player.repay_countdown) >= 24 and player.repay == True:
                 print("It seems like you haven't payback the money to the bank under 24 hours.")
-                Bank.bank_prison(player)
+                Bank.bank_prison()
                 time.sleep(0.5)
                 print(
                     "Your money in your purse and bank account have been transfered to the bank. New criminal record has been logged into your account.")
@@ -674,11 +671,11 @@ def play_game():
                                 if work_hour <= 0:
                                     print("Invalid Working Action")
                                 elif 0 < work_hour <= maximum:
-                                    workplace.work(player, work_choice, work_hour)
+                                    workplace.work(work_choice, work_hour)
                                     print("Successful!")
                                     time.sleep(1)
                                 elif work_hour > maximum:
-                                    workplace.work(player, work_choice, maximum)
+                                    workplace.work(work_choice, maximum)
                                     print(
                                         "Exceeding your working limit, automatically set to the highest time possible.")
                                     time.sleep(1)
@@ -722,11 +719,11 @@ def play_game():
                                 if work_hour <= 0:
                                     print("Invalid Working Action")
                                 elif 0 < work_hour <= maximum:
-                                    workplace.work(player, work_choice, work_hour)
+                                    workplace.work(work_choice, work_hour)
                                     print("Successful!")
                                     time.sleep(1)
                                 elif work_hour > maximum:
-                                    workplace.work(player, work_choice, maximum)
+                                    workplace.work(work_choice, maximum)
                                     print(
                                         "Exceeding your working limit, automatically set to the highest time possible.")
                                     time.sleep(1)
@@ -770,11 +767,11 @@ def play_game():
                                 if work_hour <= 0:
                                     print("Invalid Working Action")
                                 elif 0 < work_hour <= maximum:
-                                    workplace.work(player, work_choice, work_hour)
+                                    workplace.work(work_choice, work_hour)
                                     print("Successful!")
                                     time.sleep(1)
                                 elif work_hour > maximum:
-                                    workplace.work(player, work_choice, maximum)
+                                    workplace.work(work_choice, maximum)
                                     print(
                                         "Exceeding your working limit, automatically set to the highest time possible.")
                                     time.sleep(1)
@@ -818,11 +815,11 @@ def play_game():
                                 if work_hour <= 0:
                                     print("Invalid Working Action")
                                 elif 0 < work_hour <= maximum:
-                                    workplace.work(player, work_choice, work_hour)
+                                    workplace.work(work_choice, work_hour)
                                     print("Successful!")
                                     time.sleep(1)
                                 elif work_hour > maximum:
-                                    workplace.work(player, work_choice, maximum)
+                                    workplace.work(work_choice, maximum)
                                     print(
                                         "Exceeding your working limit, automatically set to the highest time possible.")
                                     time.sleep(1)
@@ -866,11 +863,11 @@ def play_game():
                                 if work_hour <= 0:
                                     print("Invalid Working Action")
                                 elif 0 < work_hour <= maximum:
-                                    workplace.work(player, work_choice, work_hour)
+                                    workplace.work(work_choice, work_hour)
                                     print("Successful!")
                                     time.sleep(1)
                                 elif work_hour > maximum:
-                                    workplace.work(player, work_choice, maximum)
+                                    workplace.work(work_choice, maximum)
                                     print(
                                         "Exceeding your working limit, automatically set to the highest time possible.")
                                     time.sleep(1)
@@ -914,11 +911,11 @@ def play_game():
                                 if work_hour <= 0:
                                     print("Invalid Working Action")
                                 elif 0 < work_hour <= maximum:
-                                    workplace.work(player, work_choice, work_hour)
+                                    workplace.work(work_choice, work_hour)
                                     print("Successful!")
                                     time.sleep(1)
                                 elif work_hour > maximum:
-                                    workplace.work(player, work_choice, maximum)
+                                    workplace.work(work_choice, maximum)
                                     print(
                                         "Exceeding your working limit, automatically set to the highest time possible.")
                                     time.sleep(1)
@@ -962,11 +959,11 @@ def play_game():
                                 if work_hour <= 0:
                                     print("Invalid Working Action")
                                 elif 0 < work_hour <= maximum:
-                                    workplace.work(player, work_choice, work_hour)
+                                    workplace.work(work_choice, work_hour)
                                     print("Successful!")
                                     time.sleep(1)
                                 elif work_hour > maximum:
-                                    workplace.work(player, work_choice, maximum)
+                                    workplace.work(work_choice, maximum)
                                     print(
                                         "Exceeding your working limit, automatically set to the highest time possible.")
                                     time.sleep(1)
@@ -1010,11 +1007,11 @@ def play_game():
                                 if work_hour <= 0:
                                     print("Invalid Working Action")
                                 elif 0 < work_hour <= maximum:
-                                    workplace.work(player, work_choice, work_hour)
+                                    workplace.work(work_choice, work_hour)
                                     print("Successful!")
                                     time.sleep(1)
                                 elif work_hour > maximum:
-                                    workplace.work(player, work_choice, maximum)
+                                    workplace.work(work_choice, maximum)
                                     print(
                                         "Exceeding your working limit, automatically set to the highest time possible.")
                                     time.sleep(1)
@@ -1029,13 +1026,13 @@ def play_game():
                         time.sleep(1)
 
             # Bank Daily Addition and Daily Interest:
-            day += floor(Time / 24)
+            day += floor(time_tracker.time / 24)
             if day >= 1:
                 number = 1
                 while number <= day:
                     Bank.Daily_Addition()
-                    Bank.Daily_Interest(player)
-                    Time -= 24
+                    Bank.Daily_Interest()
+                    time_tracker.time -= 24
                     number += 1
                 day = 0
                 number = 1
@@ -1045,7 +1042,7 @@ def play_game():
             # Bank repay countdown tester:
             if int(player.repay_countdown) >= 24 and player.repay == True:
                 print("It seems like you haven't payback the money to the bank under 24 hours.")
-                Bank.bank_prison(player)
+                Bank.bank_prison()
                 time.sleep(0.5)
                 print(
                     "Your money in your purse and bank account have been transfered to the bank. New criminal record has been logged into your account.")
@@ -1080,65 +1077,65 @@ def play_game():
                 if float(player.hunger) != 100:
                     if food == "Big Mac":
                         if float(player.player_money) >= 200:
-                            restaurant.purchase(player, food)
+                            restaurant.purchase(food)
                             print("Success! Thank you, {name}, for buying {product}.".format(name=player.name,
                                                                                              product=food))
                             time.sleep(1)
                             # Below is the timing system:
                             player.time = int(player.time + 2)
-                            Time = int(Time + 2)
+                            time_tracker.time = int(time_tracker.time + 2)
                             player.repay_countdown = int(player.repay_countdown + 2)
                         else:
                             print("Not enough money!")
                             time.sleep(1)
                     elif food == "Little Mac":
                         if float(player.player_money) >= 20:
-                            restaurant.purchase(player, food)
+                            restaurant.purchase(food)
                             print("Success! Thank you, {name}, for buying {product}.".format(name=player.name,
                                                                                              product=food))
                             time.sleep(1)
                             # Below is the timing system:
                             player.time = int(player.time + 2)
-                            Time = int(Time + 2)
+                            time_tracker.time = int(time_tracker.time + 2)
                             player.repay_countdown = int(player.repay_countdown + 2)
                         else:
                             print("Not enough money!")
                             time.sleep(1)
                     elif food == "Chicken Nugget":
                         if float(player.player_money) >= 80:
-                            restaurant.purchase(player, food)
+                            restaurant.purchase(food)
                             print("Success! Thank you, {name}, for buying {product}.".format(name=player.name,
                                                                                              product=food))
                             time.sleep(1)
                             # Below is the timing system:
                             player.time = int(player.time + 2)
-                            Time = int(Time + 2)
+                            time_tracker.time = int(time_tracker.time + 2)
                             player.repay_countdown = int(player.repay_countdown + 2)
                         else:
                             print("Not enough money!")
                             time.sleep(1)
                     elif food == "Golden Steak":
                         if float(player.player_money) >= 10000:
-                            restaurant.purchase(player, food)
+                            restaurant.purchase(food)
                             print("Success! Thank you, {name}, for buying {product}.".format(name=player.name,
                                                                                              product=food))
                             time.sleep(1)
                             # Below is the timing system:
                             player.time = int(player.time + 2)
-                            Time = int(Time + 2)
+                            time_tracker.time = int(time_tracker.time + 2)
                             player.repay_countdown = int(player.repay_countdown + 2)
                         else:
                             print("Not enough money!")
                             time.sleep(1)
                     elif food == "Steak":
                         if float(player.player_money) >= 1000:
-                            restaurant.purchase(player, food)
+                            restaurant.purchase(food)
                             print("Success! Thank you, {name}, for buying {product}.".format(name=player.name,
                                                                                              product=food))
                             time.sleep(1)
                             # Below is the timing system:
                             player.time = int(player.time + 2)
-                            Time = int(Time + 2)
+                            time_tracker.time = int(time_tracker.time + 2)
                             player.repay_countdown = int(player.repay_countdown + 2)
                         else:
                             print("Not enough money!")
@@ -1159,13 +1156,13 @@ def play_game():
                     e += 1
 
             # Bank Daily Addition and Daily Interest:
-            day += floor(Time / 24)
+            day += floor(time_tracker.time / 24)
             if day >= 1:
                 number = 1
                 while number <= day:
                     Bank.Daily_Addition()
-                    Bank.Daily_Interest(player)
-                    Time -= 24
+                    Bank.Daily_Interest()
+                    time_tracker.time -= 24
                     number += 1
                 day = 0
                 number = 1
@@ -1175,7 +1172,7 @@ def play_game():
             # Bank repay countdown tester:
             if int(player.repay_countdown) >= 24 and player.repay == True:
                 print("It seems like you haven't payback the money to the bank under 24 hours.")
-                Bank.bank_prison(player)
+                Bank.bank_prison()
                 time.sleep(0.5)
                 print(
                     "Your money in your purse and bank account have been transfered to the bank. New criminal record has been logged into your account.")
@@ -1223,6 +1220,7 @@ def play_game():
                     elif player.grade == "Above":
                         maximum = floor(min(player.player_money / 5000, player.hunger / 5)) * 10
                     else:
+                        maximum = floor(min(player.player_money / 5000, player.hunger / 5)) * 10
                         print("software bug")
 
                     if maximum == 0:
@@ -1255,24 +1253,24 @@ def play_game():
                         if study_hour <= 0:
                             print("Invalid Study Action")
                         elif 0 < study_hour <= maximum:
-                            school.study(player, study_hour)
+                            school.study(study_hour)
                             print("Successful!")
                             time.sleep(1)
                         elif study_hour > maximum:
-                            school.study(player, maximum)
+                            school.study(maximum)
                             print("Exceeding your study limit, automatically set to the highest time possible.")
                             time.sleep(1)
                         else:
                             print("software bug")
 
             # Bank Daily Addition and Daily Interest:
-            day += floor(Time / 24)
+            day += floor(time_tracker.time / 24)
             if day >= 1:
                 number = 1
                 while number <= day:
                     Bank.Daily_Addition()
-                    Bank.Daily_Interest(player)
-                    Time -= 24
+                    Bank.Daily_Interest()
+                    time_tracker.time -= 24
                     number += 1
                 day = 0
                 number = 1
@@ -1282,7 +1280,7 @@ def play_game():
             # Bank repay countdown tester:
             if int(player.repay_countdown) >= 24 and player.repay == True:
                 print("It seems like you haven't payback the money to the bank under 24 hours.")
-                Bank.bank_prison(player)
+                Bank.bank_prison()
                 time.sleep(0.5)
                 print(
                     "Your money in your purse and bank account have been transfered to the bank. New criminal record has been logged into your account.")
@@ -1333,7 +1331,7 @@ def play_game():
                         if removing_criminal_record == player.criminal_record[i]:
                             for items in prison.remove_criminal_record_payment:
                                 if removing_criminal_record == items[0] and player.player_money >= items[1]:
-                                    prison.remove_criminal_record(player, removing_criminal_record)
+                                    prison.remove_criminal_record(removing_criminal_record)
                                     print("Success! You have just removed one of your criminal records!")
                                     time.sleep(1)
                                     break
@@ -1349,13 +1347,13 @@ def play_game():
                     time.sleep(1)
 
             # Bank Daily Addition and Daily Interest:
-            day += floor(Time / 24)
+            day += floor(time_tracker.time / 24)
             if day >= 1:
                 number = 1
                 while number <= day:
                     Bank.Daily_Addition()
-                    Bank.Daily_Interest(player)
-                    Time -= 24
+                    Bank.Daily_Interest()
+                    time_tracker.time -= 24
                     number += 1
                 day = 0
                 number = 1
@@ -1363,9 +1361,9 @@ def play_game():
                 print("You have just earned your daily interest!")
 
             # Bank repay countdown tester:
-            if int(player.repay_countdown) >= 24 and player.repay == True:
+            if int(player.repay_countdown) >= 24 and player.repay:
                 print("It seems like you haven't payback the money to the bank under 24 hours.")
-                Bank.bank_prison(player)
+                Bank.bank_prison()
                 time.sleep(0.5)
                 print(
                     "Your money in your purse and bank account have been transfered to the bank. New criminal record has been logged into your account.")
@@ -1480,4 +1478,3 @@ def play_game():
 
 if __name__ == "__main__":
     play_game()
-        

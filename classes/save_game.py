@@ -48,7 +48,6 @@ class SaveGame:
         else:
             print("Creating a new account...")
             time.sleep(3)
-            self.player_config["character"]["player_saved_name"] = self.account_name
             self.fresh_load()
 
     def save_game(self, player, Bank, casino):
@@ -71,8 +70,12 @@ class SaveGame:
         # Saving casino information:
         pickle.dump(casino.casino_money, open(os.path.join(self.path, f"{self.account_name}_casino_casino_money.py"), "wb"))
 
-
     def fresh_load(self):
+        self.player_config = {
+            "character": {},
+            "bank": {},
+            "casino": {}
+        }
         self.player_config["character"]["player_saved_name"] = self.account_name
         pickle.dump(self.account_name, open(os.path.join(self.path, f"{self.account_name}_name.py"), "wb"))
         pickle.dump(self.account_name, open(os.path.join(self.account_names_path, f"{self.account_name}_name.py"), "wb"))

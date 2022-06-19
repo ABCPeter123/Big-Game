@@ -1,119 +1,128 @@
 #Below is a casino class for updating casino information:
+from random import randint
+
+
+from classes.character import Character
+from classes.bank import bank
+from classes.time_tracker import Time
+
+
 class Casino:
-    def __init__(self, casino_money = 100000):
+    def __init__(self, casino_money=100000, character: Character = None, Bank: bank = None, time: Time=None):
+        self.Bank = None
         self.casino_money = casino_money
+        self.player = character
+        self.Bank = Bank
+        self.time = time
     
-    def bet(self, player, bet):
+    def bet(self, bet):
         random_integer = randint(1, 100)
         if 1 <= random_integer <= 10:
-            player.player_money = round(float(player.player_money + 2 * bet), 2)
+            self.player.player_money = round(float(self.player.player_money + 2 * bet), 2)
             self.casino_money = round(float(self.casino_money - 2 * bet), 2)
-            print("Congradulation, {player}! You have just won the +2x award!".format(player = player.name))
+            print("Congradulation, {player}! You have just won the +2x award!".format(player=self.player.name))
             if float(self.casino_money) <= 0:
                 self.casino_money = 100000
         elif 11 <= random_integer <= 40:
-            player.player_money = round(float(player.player_money + 1.6 * bet), 2)
+            self.player.player_money = round(float(self.player.player_money + 1.6 * bet), 2)
             self.casino_money = round(float(self.casino_money - 1.6 * bet), 2)
-            print("Congradulation, {player}! You have just won the +1.6x award!".format(player = player.name))
+            print("Congradulation, {player}! You have just won the +1.6x award!".format(player=self.player.name))
             if float(self.casino_money) <= 0:
                 self.casino_money = 100000
         elif 41 <= random_integer <= 60:
-            print("Sorry, {player}! You have just lost -1.2x.".format(player = player.name))
-            if float(player.player_money) < 1.2 * bet and float(player.money_in_bank < 1.2 * bet):
+            print("Sorry, {player}! You have just lost -1.2x.".format(player=self.player.name))
+            if float(self.player.player_money) < 1.2 * bet and float(self.player.money_in_bank < 1.2 * bet):
                 print("It doesn't seem like you have enough money in your purse and in your bank account. You will now be sent to jail.")
-                player.casino_repay = round(float(1.2 * bet), 2)
-                self.casino_jail(player)
-            elif float(player.player_money) < 1.2 * bet and float(player.money_in_bank >= 1.2 * bet):
-                player.money_in_bank = round(float(player.money_in_bank - 1.2 * bet), 2)
+                self.player.casino_repay = round(float(1.2 * bet), 2)
+                self.casino_jail()
+            elif float(self.player.player_money) < 1.2 * bet and float(self.player.money_in_bank >= 1.2 * bet):
+                self.player.money_in_bank = round(float(self.player.money_in_bank - 1.2 * bet), 2)
                 self.casino_money = round(float(self.casino_money + 1.2 * bet), 2)
-            elif float(player.player_money) > 1.2 * bet:
-                player.player_money = round(float(player.player_money - 1.2 * bet), 2)
+            elif float(self.player.player_money) > 1.2 * bet:
+                self.player.player_money = round(float(self.player.player_money - 1.2 * bet), 2)
                 self.casino_money = round(float(self.casino_money + 1.2 * bet), 2)
             else:
                 print("Software Error")
         elif 61 <= random_integer <= 80:
-            print("Sorry, {player}! You have just lost -1.5x.".format(player = player.name))
-            if float(player.player_money) < 1.5 * bet and float(player.money_in_bank < 1.5 * bet):
+            print("Sorry, {player}! You have just lost -1.5x.".format(player=self.player.name))
+            if float(self.player.player_money) < 1.5 * bet and float(self.player.money_in_bank < 1.5 * bet):
                 print("It doesn't seem like you have enough money in your purse and in your bank account. You will now be sent to jail.")
-                player.casino_repay = round(float(1.5 * bet), 2)
-                self.casino_jail(player)
-            elif float(player.player_money) < 1.5 * bet and float(player.money_in_bank >= 1.5 * bet):
-                player.money_in_bank = round(float(player.money_in_bank - 1.5 * bet), 2)
+                self.player.casino_repay = round(float(1.5 * bet), 2)
+                self.casino_jail()
+            elif float(self.player.player_money) < 1.5 * bet and float(self.player.money_in_bank >= 1.5 * bet):
+                self.player.money_in_bank = round(float(self.player.money_in_bank - 1.5 * bet), 2)
                 self.casino_money = round(float(self.casino_money + 1.5 * bet), 2)
-            elif float(player.player_money) > 1.5 * bet:
-                player.player_money = round(float(player.player_money - 1.5 * bet), 2)
+            elif float(self.player.player_money) > 1.5 * bet:
+                self.player.player_money = round(float(self.player.player_money - 1.5 * bet), 2)
                 self.casino_money = round(float(self.casino_money + 1.5 * bet), 2)
             else:
                 print("Software Error")
         elif 81 <= random_integer <= 100:
-            player.player_money = round(float(player.player_money - 2 * bet), 2)
+            self.player.player_money = round(float(self.player.player_money - 2 * bet), 2)
             self.casino_money = round(float(self.casino_money + 2 * bet), 2)
-            print("Sorry, {player}! You have just lost -2x.".format(player = player.name))
-            if float(player.player_money) < 2 * bet and float(player.money_in_bank < 2 * bet):
+            print("Sorry, {player}! You have just lost -2x.".format(player=self.player.name))
+            if float(self.player.player_money) < 2 * bet and float(self.player.money_in_bank < 2 * bet):
                 print("It doesn't seem like you have enough money in your purse and in your bank account. You will now be sent to jail.")
-                player.casino_repay = round(float(2 * bet), 2)
-                self.casino_jail(player)
-            elif float(player.player_money) < 2 * bet and float(player.money_in_bank >= 2 * bet):
-                player.money_in_bank = round(float(player.money_in_bank - 2 * bet), 2)
+                self.player.casino_repay = round(float(2 * bet), 2)
+                self.casino_jail()
+            elif float(self.player.player_money) < 2 * bet and float(self.player.money_in_bank >= 2 * bet):
+                self.player.money_in_bank = round(float(self.player.money_in_bank - 2 * bet), 2)
                 self.casino_money = round(float(self.casino_money + 2 * bet), 2)
-            elif float(player.player_money) > 2 * bet:
-                player.player_money = round(float(player.player_money - 2 * bet), 2)
+            elif float(self.player.player_money) > 2 * bet:
+                self.player.player_money = round(float(self.player.player_money - 2 * bet), 2)
                 self.casino_money = round(float(self.casino_money + 2 * bet), 2)
             else:
                 print("Software Error")
         else:
             print("Software Error.")
 
-    def casino_jail(self, player):
-        Bank.bank_money = round(float(Bank.bank_money + player.player_money), 2)
-        player.player_money = 0
-        player.money_in_bank = 0
+    def casino_jail(self):
+        self.Bank.bank_money = round(float(self.Bank.bank_money + self.player.player_money), 2)
+        self.player.player_money = 0
+        self.player.money_in_bank = 0
 
-        global Time
-
-        if 0 < player.casino_repay <= 100:
-            player.time = int(player.time + 12)
-            Time = int(Time + 12)
-            player.repay_countdown = int(player.repay_countdown + 12)
-            player.criminal_record += "A"
-            player.casino_repay = 0
-        elif 100 < player.casino_repay <= 1000:
-            player.time = int(player.time + 24)
-            Time = int(Time + 24)
-            player.repay_countdown = int(player.repay_countdown + 24)
-            player.criminal_record += "B"
-            player.casino_repay = 0
-        elif 1000 < player.casino_repay <= 5000:
-            player.time = int(player.time + 36)
-            Time = int(Time + 36)
-            player.repay_countdown = int(player.repay_countdown + 36)
-            player.criminal_record += "C"
-            player.casino_repay = 0
-        elif 5000 < player.casino_repay <= 10000:
-            player.time = int(player.time + 48)
-            Time = int(Time + 48)
-            player.repay_countdown = int(player.repay_countdown + 48)
-            player.criminal_record += "D"
-            player.casino_repay = 0
-        elif 10000 < player.casino_repay <= 20000:
-            player.time = int(player.time + 96)
-            Time = int(Time + 96)
-            player.repay_countdown = int(player.repay_countdown + 96)
-            player.criminal_record += "E"
-            player.casino_repay = 0
-        elif 20000 < player.casino_repay <= 80000:
-            player.time = int(player.time + 240)
-            Time = int(Time + 240)
-            player.repay_countdown = int(player.repay_countdown + 240)
-            player.criminal_record += "F"
-            player.casino_repay = 0
-        elif 80000 < player.casino_repay:
-            player.time = int(player.time + 480)
-            Time = int(Time + 480)
-            player.repay_countdown = int(player.repay_countdown + 480)
-            player.criminal_record += "G"
-            player.casino_repay = 0
-
+        if 0 < self.player.casino_repay <= 100:
+            self.player.time = int(self.player.time + 12)
+            self.time.time = int(self.time.time + 12)
+            self.player.repay_countdown = int(self.player.repay_countdown + 12)
+            self.player.criminal_record += "A"
+            self.player.casino_repay = 0
+        elif 100 < self.player.casino_repay <= 1000:
+            self.player.time = int(self.player.time + 24)
+            self.time.time = int(self.time.time + 24)
+            self.player.repay_countdown = int(self.player.repay_countdown + 24)
+            self.player.criminal_record += "B"
+            self.player.casino_repay = 0
+        elif 1000 < self.player.casino_repay <= 5000:
+            self.player.time = int(self.player.time + 36)
+            self.time.time = int(self.time.time + 36)
+            self.player.repay_countdown = int(player.repay_countdown + 36)
+            self.player.criminal_record += "C"
+            self.player.casino_repay = 0
+        elif 5000 < self.player.casino_repay <= 10000:
+            self.player.time = int(self.player.time + 48)
+            self.time.time = int(self.time.time + 48)
+            self.player.repay_countdown = int(self.player.repay_countdown + 48)
+            self.player.criminal_record += "D"
+            self.player.casino_repay = 0
+        elif 10000 < self.player.casino_repay <= 20000:
+            self.player.time = int(self.player.time + 96)
+            self.time.time = int(self.time.time + 96)
+            self.player.repay_countdown = int(self.player.repay_countdown + 96)
+            self.player.criminal_record += "E"
+            self.player.casino_repay = 0
+        elif 20000 < self.player.casino_repay <= 80000:
+            self.player.time = int(self.player.time + 240)
+            self.time.time = int(self.time.time + 240)
+            self.player.repay_countdown = int(self.player.repay_countdown + 240)
+            self.player.criminal_record += "F"
+            self.player.casino_repay = 0
+        elif 80000 < self.player.casino_repay:
+            self.player.time = int(self.player.time + 480)
+            self.time.time = int(self.time.time + 480)
+            self.player.repay_countdown = int(self.player.repay_countdown + 480)
+            self.player.criminal_record += "G"
+            self.player.casino_repay = 0
 
     def __repr__(self):
         casino_introduction = """
@@ -125,5 +134,5 @@ In the gambling, you can win/lose the following ratios:
 -1.5x --> 20%
 -2x --> 20%
 Currently the casino has ${money}.
-""".format(player = player.name, money = self.casino_money)
+""".format(player=self.player.name, money=self.casino_money)
         return casino_introduction
